@@ -9,9 +9,12 @@
 */
 
 window.snake.timeKeeper = {};
+window.snake.timeKeeper.debug = false;
 //called on every apple
 window.snake.timeKeeper.gotApple = function(time, score){
-	//console.log("got Apple %s, %s", time, score);
+	if(window.snake.timeKeeper.debug){
+		console.log("got Apple %s, %s", time, score);
+	}
 	window.snake.timeKeeper.lastAppleDate = new Date();
 	window.snake.timeKeeper.lastAppleTime = time;
 	//save time
@@ -22,13 +25,17 @@ window.snake.timeKeeper.gotApple = function(time, score){
 
 //called when you get all apples
 window.snake.timeKeeper.gotAll = function(time, score){
-	//console.log("got All %s, %s", time, score);
+	if(window.snake.timeKeeper.debug){
+		console.log("got All %s, %s", time, score);
+	}
 	window.snake.timeKeeper.savePB(time, "ALL", window.snake.timeKeeper.mode, window.snake.timeKeeper.count, window.snake.timeKeeper.speed, window.snake.timeKeeper.size);
 }
 
 //called when you're dead, every time.
 window.snake.timeKeeper.death = function(time, score){
-	//console.log("death %s, %s", time, score);
+	if(window.snake.timeKeeper.debug){
+		console.log("death %s, %s", time, score);
+	}
 	if(window.snake.timeKeeper.playing){
 		window.snake.timeKeeper.playing = false;
 		window.snake.timeKeeper.saveScore(time, score, window.snake.timeKeeper.mode, window.snake.timeKeeper.count, window.snake.timeKeeper.speed, window.snake.timeKeeper.size);
@@ -37,7 +44,9 @@ window.snake.timeKeeper.death = function(time, score){
 
 //called when you start gamed d
 window.snake.timeKeeper.start = function(){
-	//console.log("start");
+	if(window.snake.timeKeeper.debug){
+		console.log("start");
+	}
 	window.snake.timeKeeper.playing = true;
 	//save current settings
 	window.snake.timeKeeper.mode = window.snake.timeKeeper.getCurrentMode();
@@ -328,7 +337,9 @@ window.snake.timeKeeper.showDialog = function(){
 				case 6: gamemode += "YinYang, "; break;
 				case 7: gamemode += "Key, "; break;
 				case 8: gamemode += "Sokoban, "; break;
-				case 9: gamemode += "Peaceful, "; break;
+				case 9: gamemode += "Poison, "; break;
+				case 10: gamemode += "Dimension, "; break;
+				case 11: gamemode += "Peaceful, "; break;
 				default: gamemode += "Unknown, "; break;
 			}
 		}
@@ -461,16 +472,17 @@ window.snake.timeKeeper.showDialog = function(){
 
 function processSnakeCode(code){
 	//change stepfunction to run gotApple(), gotAll() and death()
-	let func = code.match(/[a-zA-Z0-9_$.]{1,40}=function\(\)[^\\]{1,700}RIGHT":0[^\\]*?=function/)[0];
+	let func = code.match(/[a-zA-Z0-9_$.]{1,40}=function\(\)[^\\]{1,1000}RIGHT":0[^\\]*?=function/)[0];
 	func = func.substring(0,func.lastIndexOf(";"));
 	let modeFunc = func.match(/!1}\);[^%]{0,10}/)[0];
 	modeFunc = modeFunc.substring(modeFunc.indexOf("(")+1,modeFunc.lastIndexOf("("));
 	scoreFunc = func.match(/25\!\=\=this.[a-zA-Z0-9$]{1,4}/)[0];
 	scoreFunc = scoreFunc.substring(scoreFunc.indexOf("this."),scoreFunc.size);
 	timeFunc = func.match(/this.[a-zA-Z0-9$]{1,6}\*this.[a-zA-Z0-9$]{1,6}/)[0];
-	ownFuncIndex = func.indexOf(func.match(/!1}\);[^%]{0,10}/)[0])+5;
+	ownFuncIndex = func.indexOf(func.match(/!1}\);\([^%]{0,10}/)[0])+5;
 	ownFunc = "window.snake.timeKeeper.gotApple(Math.floor("+timeFunc+"),"+scoreFunc+");"
 	func = func.slice(0, ownFuncIndex) + ownFunc + func.slice(ownFuncIndex);
+
 	//change all apples to run gotAll()
 	func = func.slice(0,func.indexOf("WIN.play()")+11)+"window.snake.timeKeeper.gotAll(Math.floor("+timeFunc+"),"+scoreFunc+"),"+func.slice(func.indexOf("WIN.play()")+11);
 
@@ -481,7 +493,7 @@ function processSnakeCode(code){
 
 	//change start function to run gameStart()
 	func = code.match(/[a-zA-Z0-9_$]{1,6}=function\(a,b\){if\(!\(a.[a-zA-Z0-9$]{1,4}[^\\]*?=function/)[0];
-	func = func.substring(0, func.lastIndexOf(","));
+	func = func.substring(0, func.lastIndexOf(";"));
 	step = timeFunc.substring(0,timeFunc.indexOf("*"));
 	step = "a"+step.slice(step.indexOf("."));
 	
